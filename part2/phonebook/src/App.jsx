@@ -81,8 +81,6 @@ const App = () => {
 
       })
     }
-
-
     }
     else{
       personsServices
@@ -94,6 +92,13 @@ const App = () => {
           `Added ${returnedPerson.name}`
         )
 
+        setTimeout(() => {
+          setMessage(null)
+        },5000)
+      })
+      .catch(error => {
+        console.log(error)
+        setMessage(error.response.data.error)
         setTimeout(() => {
           setMessage(null)
         },5000)
