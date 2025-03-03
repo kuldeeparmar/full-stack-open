@@ -4,25 +4,16 @@ const supertest = require('supertest')
 const app = require('../app')
 const { default: mongoose } = require('mongoose')
 const Blog = require('../models/blog')
+const helper = require('./test_helper')
 
 const api = supertest(app)
 
 beforeEach(async () => {
   await Blog.deleteMany({})
-
-  const blog = [
-    {
-      title : 'Mental Fittenest',
-      author : 'Dr.Lalu',
-      url : 'http://www.lalu.com',
-      likes : 10
-    }
-  ]
-
-  const blogObject = new Blog(blog[0])
-
-  await blogObject.save()
-
+  const blogObject1 = new Blog(helper.initialBlogs[0])
+  await blogObject1.save()
+  const blogObject2 = new Blog(helper.initialBlogs[1])
+  await blogObject2.save()
 })
 
 test('return blog is json',async () => {
@@ -89,6 +80,38 @@ test('test for title or author missing',async () => {
     .send(blog)
     .expect(400)
 
+})
+
+test('deletion of blog',async () => {
+  const blogs = await helper.blogInDB()
+  const blogsAtStart = blogs[0]
+
+  await api
+    .delete(`/api/blogs/${blogsAtStart.id}`)
+    .expect(200)
+
+  const blogAtEnd = await helper.blogInDB()
+
+  const titles = blogAtEnd.map(r => r.title)
+
+  assert(!titles.includes(blogsAtStart.title))
+
+  assert.strictEqual(blogAtEnd.length,helper.initialBlogs.length-1)
+
+})
+
+test('updated a blog',async () => {
+  const blogs = await helper.blogInDB()
+
+  const blogsAtStart = blogs[0]
+
+  blogsAtStart.likes = 55
+
+  const response = await api
+    .put(`/api/blogs/${blogsAtStart.id}`)
+    .send(blogsAtStart)
+
+  assert.deepStrictEqual(response.body,blogsAtStart)
 })
 
 after(async () => {

@@ -29,4 +29,32 @@ blogRouter.post('/',(request,response) => {
     })
 })
 
+blogRouter.delete('/:id', (request,response,next) => {
+  Blog.findByIdAndDelete(request.params.id)
+    .then(() => {
+      response.status(200).end()
+    })
+    .catch(error => {
+      next(error)
+    })
+})
+
+blogRouter.put('/:id',(request,response,next) => {
+  const blog = {
+    title : request.body.title,
+    author : request.body.author,
+    url  : request.body.url,
+    likes : request.body.likes
+  }
+
+  Blog.findByIdAndUpdate(request.params.id,blog,{ new : true ,context : 'query' })
+    .then(updatedBlog => {
+      response.json(updatedBlog)
+    })
+    .catch(error => {
+      next(error)
+    })
+
+})
+
 module.exports = blogRouter
