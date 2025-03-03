@@ -2,8 +2,8 @@ POST http://localhost:3001/api/blogs
 Content-Type: application/json
 
 {
-   "title" : "Mental Health",
+   "title" : "Mental Fittenest",
   "author" : "Dr.Lalu",
   "url" : "http://www.lalu.com",
-  "likes" : 100 
+  "likes" : 10
 }
