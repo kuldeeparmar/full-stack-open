@@ -1,19 +1,45 @@
-const { test, after, beforeEach } = require('node:test')
+const { test, after, beforeEach,describe } = require('node:test')
 const assert = require('node:assert')
 const supertest = require('supertest')
 const app = require('../app')
 const { default: mongoose } = require('mongoose')
 const Blog = require('../models/blog')
 const helper = require('./test_helper')
+const User = require('../models/user')
+const bcryptjs = require('bcryptjs')
 
 const api = supertest(app)
 
 beforeEach(async () => {
+  // User intial data
+  const saltRounds = 10
+  await User.deleteMany({})
+
+  for (let i = 0; i < helper.initialUser.length; i++) {
+    helper.initialUser[i].passwordHash = await bcryptjs.hash(helper.initialUser[i].passwordHash,saltRounds)
+    const userObject = new User(helper.initialUser[i])
+    await userObject.save()
+  }
+
+  // // Blog initial data
   await Blog.deleteMany({})
-  const blogObject1 = new Blog(helper.initialBlogs[0])
-  await blogObject1.save()
-  const blogObject2 = new Blog(helper.initialBlogs[1])
-  await blogObject2.save()
+  const users = await User.find({})
+  for (let i = 0; i < helper.initialBlogs.length ; i++) {
+    helper.initialBlogs[i].user = users[i]._id
+    const blogObject = new Blog(helper.initialBlogs[i])
+    await blogObject.save()
+  }
+
+  const blogs = await Blog.find({})
+
+  for (let i=0;i<blogs.length;i++) {
+    const user = await User.findById(blogs[i].user)
+    user.blogs = user.blogs.concat(blogs[i]._id)
+    await user.save()
+  }
+
+
+
 })
 
 test('return blog is json',async () => {
@@ -127,6 +153,57 @@ test('invalid user',async () => {
     .expect(400)
     .expect('Content-Type',/application\/json/)
 })
+
+describe('for adding blog',() => {
+  test('adding a new blog',async () => {
+    const user = {
+      username : helper.initialUser[0].username,
+      password : helper.initialUser[0].passwordHash
+    }
+    const response = await api
+      .post('/api/login')
+      .send(user)
+      .expect(200)
+      .expect('Content-Type',/application\/json/)
+
+    const token = response.body.token
+
+    const blog = {
+      title : 'Entertain Videos',
+      author : 'Dr. Janshi',
+      url : 'http://www.janshimela.com',
+      likes : 100
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(blog)
+      .set('Authorization',`Bearer ${token}`)
+      .expect(201)
+      .expect('Content-Type',/application\/json/)
+
+    const blogs = await helper.blogInDB()
+    assert.strictEqual(blogs.length,helper.initialBlogs.length+1)
+  })
+
+  test('invalid token',async () => {
+    const blog = {
+      title : 'History Run',
+      author : 'Dr. Agra',
+      url : 'http://www.chhaava.com',
+      likes : 100
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(blog)
+      .set('Authorization','Bearer randomToken')
+      .expect(401)
+
+  })
+})
+
+
 
 after(async () => {
   await mongoose.connection.close()

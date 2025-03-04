@@ -1,10 +1,10 @@
 POST http://localhost:3001/api/blogs
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imt1bGRlZXAiLCJpZCI6IjY3YzZkNjRiYWNiNTFlOThiYWJjNjE4MSIsImlhdCI6MTc0MTA5MjIxNywiZXhwIjoxNzQxMDkyNTE3fQ.1IW1Qdm-WIh_aFwJkR-kCsIA7b2QngWaaQcgW5g160I
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imt1c2giLCJpZCI6IjY3YzZkNjI3YWNiNTFlOThiYWJjNjE3ZSIsImlhdCI6MTc0MTA5OTA0MSwiZXhwIjoxNzQxMDk5MzQxfQ.6erE1Uhw7-k9oZV_eze8wsgMNJAVSDWqLdzh11vlYJU
 
 {
-   "title" : "Math Magic",
-  "author" : "Dr. NewLa",
-  "url" : "http://www.mathworld.com",
+  "title" : "Entertain Videos",
+  "author" : "Dr. Janshi",
+  "url" : "http://www.janshimela.com",
   "likes" : 100
 }
