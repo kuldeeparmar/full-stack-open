@@ -1,9 +1,10 @@
 POST http://localhost:3001/api/blogs
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imt1bGRlZXAiLCJpZCI6IjY3YzZkNjRiYWNiNTFlOThiYWJjNjE4MSIsImlhdCI6MTc0MTA5MjIxNywiZXhwIjoxNzQxMDkyNTE3fQ.1IW1Qdm-WIh_aFwJkR-kCsIA7b2QngWaaQcgW5g160I
 
 {
-   "title" : "Mental Fittenest",
-  "author" : "Dr.Lalu",
-  "url" : "http://www.lalu.com",
-  "likes" : 10
+   "title" : "Math Magic",
+  "author" : "Dr. NewLa",
+  "url" : "http://www.mathworld.com",
+  "likes" : 100
 }

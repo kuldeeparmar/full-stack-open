@@ -114,6 +114,20 @@ test('updated a blog',async () => {
   assert.deepStrictEqual(response.body,blogsAtStart)
 })
 
+test('invalid user',async () => {
+  const user = {
+    username : 'karan',
+    name : 'arora',
+    password : '12'
+  }
+
+  await api
+    .post('/api/users')
+    .send(user)
+    .expect(400)
+    .expect('Content-Type',/application\/json/)
+})
+
 after(async () => {
   await mongoose.connection.close()
 })

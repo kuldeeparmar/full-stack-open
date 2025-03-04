@@ -1,45 +1,57 @@
 const blogRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
+const jwt = require('jsonwebtoken')
 
 
 blogRouter.get('/',async (request,response) => {
-  const result = await Blog.find({})
+  const result = await Blog.find({}).populate('user',{ username : 1 , name : 1 })
   response.json(result)
 })
 
-blogRouter.post('/',(request,response) => {
+// const getUserToken = (request) => {
+//   const authorization = request.get('authorization')
 
-  if(!request.body.title || !request.body.author) {
-    return response.status(400).end()
+//   if(authorization && authorization.startsWith('Bearer ')) {
+//     return authorization.replace('Bearer ','')
+//   }
+
+//   return null
+// }
+
+blogRouter.post('/',async (request,response) => {
+
+  const decodedToken = jwt.verify(request.token,process.env.SECRET)
+
+  if(!decodedToken.id) {
+    return response.status(401).json({ error : 'token invalid' })
   }
+
+  const user = await User.findById(decodedToken.id)
 
   const blog = {
     title : request.body.title,
     author : request.body.author,
     url : request.body.url,
-    likes : request.body.likes || 0
+    likes : request.body.likes || 0,
+    user : user.id
   }
 
   const blogObject = new Blog(blog)
+  const savedBlog = await blogObject.save()
 
-  blogObject
-    .save()
-    .then(result => {
-      response.status(201).json(result)
-    })
+  user.blogs = user.blogs.concat(savedBlog._id)
+  await user.save()
+
+  response.status(201).json(savedBlog)
 })
 
-blogRouter.delete('/:id', (request,response,next) => {
-  Blog.findByIdAndDelete(request.params.id)
-    .then(() => {
-      response.status(200).end()
-    })
-    .catch(error => {
-      next(error)
-    })
+blogRouter.delete('/:id',async (request,response) => {
+  await Blog.findByIdAndDelete(request.params.id)
+  response.status(200).end()
 })
 
-blogRouter.put('/:id',(request,response,next) => {
+blogRouter.put('/:id',async (request,response) => {
   const blog = {
     title : request.body.title,
     author : request.body.author,
@@ -47,14 +59,8 @@ blogRouter.put('/:id',(request,response,next) => {
     likes : request.body.likes
   }
 
-  Blog.findByIdAndUpdate(request.params.id,blog,{ new : true ,context : 'query' })
-    .then(updatedBlog => {
-      response.json(updatedBlog)
-    })
-    .catch(error => {
-      next(error)
-    })
-
+  const updatedBlog  = await Blog.findByIdAndUpdate(request.params.id,blog,{ new : true ,context : 'query' })
+  response.json(updatedBlog)
 })
 
 module.exports = blogRouter
