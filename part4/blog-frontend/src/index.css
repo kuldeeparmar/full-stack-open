@@ -1,0 +1,16 @@
+button {
+  margin : 5px;
+}
+
+input {
+  margin: 5px;
+}
+
+.errorMessage {
+  border: 2px solid green;
+  margin: 5px;
+  color: khaki;
+  font-size: 17pt;
+  font-family: 'Courier New', Courier, monospace;
+  background-color: violet;
+}
