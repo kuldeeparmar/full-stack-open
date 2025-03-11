@@ -1,37 +1,31 @@
-import { useState } from "react"
-import { useEffect } from "react"
+import { useRef, useState } from 'react'
+import { useEffect } from 'react'
 import blogServices from './services/blogs'
-import Blog from "./Blog"
-import LoginForm from "./LoginForm"
+import Blog from './components/Blog'
+import LoginForm from './components/LoginForm'
 import loginServices from './services/login'
-import BlogForm from "./BlogForm"
-import Notification from "./Notification"
+import BlogForm from './components/BlogForm'
+import Notification from './components/Notification'
+import Togglable from './components/Togglable'
 
 function App() {
 
   const [blogs,setBlogs] = useState([])
   const [user,setUser] = useState(null)
-  const [username,setUsername] = useState('')
-  const [password,setPassword] = useState('')
-  const [newBlog,setNewBlog] = useState({
-    title : '',
-    author : '',
-    url : ''
-  }) 
   const [errorMessage,setErrorMessage] = useState(null)
-  const [loginVisible,setLoginVisible] = useState(false)
+  const blogFormRef = useRef(null)
 
   useEffect(() => {
 
     const fetchData = async () => {
       try {
-        const getAllBlogs = await blogServices.getAll();
+        const getAllBlogs = await blogServices.getAll()
         setBlogs(getAllBlogs)
       } catch (error) {
         console.error('Error while fetch blog',error)
       }
     }
-    
+
     fetchData()
 
   },[])
@@ -48,16 +42,13 @@ function App() {
   },[])
 
 
-  const handleLoginFormSubmit = async (event) => {
-    event.preventDefault()
+  const handleLoginFormSubmit = async ({ username,password }) => {
 
     try {
-      const result = await loginServices.login({username,password})
+      const result = await loginServices.login({ username,password })
       window.localStorage.setItem('loggedBlogAppUser',JSON.stringify(result))
       blogServices.setToken(result.token)
       setUser(result)
-      setPassword('')
-      setUsername('')
     } catch(error) {
       console.error('Error while Login',error)
       const message = `Error while login ${error.response.data.error}`
@@ -70,15 +61,17 @@ function App() {
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogAppUser')
+    blogServices.setToken('')
     setUser(null)
   }
 
-  const handleBlogFormSubmit  = async (event) => {
-    event.preventDefault()
+  const handleBlogFormSubmit  = async (blogObject) => {
+
 
     try {
-      const result = await blogServices.create(newBlog)
-      setNewBlog({ ...newBlog, title:'',author:'',url:'' })
+
+      const result = await blogServices.create(blogObject)
+      blogFormRef.current.toggleVisiblity()
       setBlogs(blogs.concat(result))
       const message = `new blog ${result.title} is added, whose author is ${result.author}`
       setErrorMessage(message)
@@ -96,21 +89,52 @@ function App() {
     }
   }
 
+  const handleLikeUpdate = async (id) => {
+    const blog = blogs.find(blog => blog.id === id)
+    const changedBlog = { ...blog,likes : blog.likes + 1 }
+
+    const result = await blogServices.update(id,changedBlog)
+    setBlogs(blogs.map(blog => blog.id === id ? result : blog))
+  }
+
+  const sortedBlogs = blogs.sort((a,b) => b.likes - a.likes)
+
+  const handleBlogDelete = async (id) => {
+    const blog = blogs.find(b => b.id === id)
+    const message = `Remove blog ${blog.title} by ${blog.author}`
+    if(window.confirm(message)) {
+      try {
+        const result = await blogServices.deleteBlog(id)
+        console.log(result)
+        setBlogs((prevBlogs) => prevBlogs.filter(blog => blog.id !== id))
+      } catch(error) {
+        console.error('Error while deleting blog',error)
+      }
+
+    }
+  }
+
+
+
   return (
     <>
-      {errorMessage != null && <Notification errorMessage={errorMessage} />}
-      { user == null 
-      ? <LoginForm username={username} password={password}  setPassword={setPassword} 
-          setUsername={setUsername} handleLoginFormSubmit={handleLoginFormSubmit} 
-          loginVisible={loginVisible} setLoginVisible={setLoginVisible}/>
-      : <div>
+      {errorMessage !== null && <Notification errorMessage={errorMessage} />}
+      { user === null
+        ? <Togglable buttonLabel="login" >
+          <LoginForm loginUser={handleLoginFormSubmit} />
+        </Togglable>
+        : <div>
           <h1>blogs</h1>
           <div>
             {user.name} is logged-in
             <button onClick={handleLogout}>logout</button>
           </div>
-          <BlogForm newBlog={newBlog} setNewBlog={setNewBlog} handleBlogFormSubmit={handleBlogFormSubmit}/>
-          {blogs.map(blog => <Blog key={blog.id} blog={blog}/>)}
+
+          <Togglable buttonLabel="new blog" ref={blogFormRef} >
+            <BlogForm createBlog={handleBlogFormSubmit}/>
+          </Togglable>
+          {sortedBlogs.map(blog => <Blog key={blog.id} blog={blog} handleLikeUpdate={handleLikeUpdate}
+            userUsername={user.username} handleBlogDelete={handleBlogDelete}/>)}
         </div>
       }
     </>

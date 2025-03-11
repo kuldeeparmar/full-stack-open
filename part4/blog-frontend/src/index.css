@@ -14,3 +14,7 @@ input {
   font-family: 'Courier New', Courier, monospace;
   background-color: violet;
 }
+
+p {
+  margin: 0;
+}
