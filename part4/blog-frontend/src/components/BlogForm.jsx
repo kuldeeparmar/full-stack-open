@@ -21,15 +21,17 @@ const BlogForm = (props) => {
         <div>
           title
           <input value={newBlog.title} onChange={ ({ target }) => setNewBlog({ ...newBlog, title:target.value })}
-          placeholder='blog title'/>
+          placeholder='blog title' data-testid='title'/>
         </div>
         <div>
           author
-          <input value={newBlog.author} onChange={ ({ target }) => setNewBlog({ ...newBlog, author:target.value })}/>
+          <input value={newBlog.author} onChange={ ({ target }) => setNewBlog({ ...newBlog, author:target.value })}
+          data-testid='author'/>
         </div>
         <div>
           url
-          <input value={newBlog.url} onChange={ ({ target }) => setNewBlog({ ...newBlog, url:target.value })}/>
+          <input value={newBlog.url} onChange={ ({ target }) => setNewBlog({ ...newBlog, url:target.value })}
+          data-testid='url'/>
         </div>
         <button type="submit" >create</button>
       </form>
